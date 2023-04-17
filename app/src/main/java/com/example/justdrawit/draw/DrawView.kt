@@ -7,7 +7,6 @@ import android.view.MotionEvent
 import android.view.View
 import kotlin.math.abs
 
-
 class DrawView(c: Context, attributeSet: AttributeSet) : View(c, attributeSet) {
 
     private var mPaint: Paint = Paint()
@@ -19,6 +18,7 @@ class DrawView(c: Context, attributeSet: AttributeSet) : View(c, attributeSet) {
     private var currentColor = Color.BLACK
     private var brushStrokeWidth = 0
     private val mBitmapPaint = Paint(Paint.DITHER_FLAG)
+
 
     private val TOUCH_TOLERANCE = 4f
     private var mX = 0f
@@ -42,19 +42,24 @@ class DrawView(c: Context, attributeSet: AttributeSet) : View(c, attributeSet) {
         canvas.restore()
     }
 
+    init {
+        //the below methods smoothens the drawings of the user
+        mPaint.isAntiAlias = true
+        mPaint.isDither = true
+        mPaint.color = currentColor
+        mPaint.style = Paint.Style.STROKE
+        mPaint.strokeJoin = Paint.Join.ROUND
+        mPaint.strokeCap = Paint.Cap.ROUND
+        //0xff=255 in decimal
+        mPaint.alpha = 0xff
+    }
+
     fun init(height: Int, width: Int) {
         mBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)?.also {
             mCanvas = Canvas(it)
         }
         currentColor = Color.BLACK
         brushStrokeWidth = 20
-    }
-
-    fun back() {
-        if (paths.size != 0) {
-            paths.removeAt(paths.size - 1)
-            invalidate()
-        }
     }
 
     private fun touchStart(x: Float, y: Float) {
@@ -66,7 +71,7 @@ class DrawView(c: Context, attributeSet: AttributeSet) : View(c, attributeSet) {
         mPath.reset()
         //this methods sets the starting point of the line being drawn
         mPath.moveTo(x, y)
-        //we save the current coordinates of the finger
+        //save the current coordinates of the finger
         mX = x
         mY = y
     }
@@ -104,4 +109,21 @@ class DrawView(c: Context, attributeSet: AttributeSet) : View(c, attributeSet) {
         }
         return true
     }
+
+    //buttons
+    fun back() {
+        if (paths.size != 0) {
+            paths.removeAt(paths.size - 1)
+            invalidate()
+        }
+    }
+
+    fun setColor(color: Int) {
+        currentColor = color
+    }
+
+    fun setStrokeWidth(width: Int) {
+        brushStrokeWidth = width
+    }
+
 }

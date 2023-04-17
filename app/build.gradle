@@ -47,5 +47,5 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 
     implementation "androidx.core:core-splashscreen:1.0.0"
-
+    implementation "com.github.skydoves:colorpickerpreference:2.0.6"
 }
