@@ -20,6 +20,7 @@ class MainActivity : AppCompatActivity() {
 
         // buttons
         binding.btnBack.setOnClickListener { binding.drawView.back() }
+        binding.btnForward.setOnClickListener { binding.drawView.forward() }
         binding.btnColors.setOnClickListener { showColorPickerDialog() }
         binding.btnSettings.setOnClickListener { binding.drawView.back() }
         binding.btnTools.setOnClickListener {

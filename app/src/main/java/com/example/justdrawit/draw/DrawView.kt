@@ -12,13 +12,15 @@ class DrawView(c: Context, attributeSet: AttributeSet) : View(c, attributeSet) {
     private var mPaint: Paint = Paint()
     private var mBitmap: Bitmap? = null
     private var mCanvas: Canvas? = null
-    private lateinit var mPath: Path
     private var mTool: Tool? = null
-    private val paths = mutableListOf<Brushstroke>()
     private var currentColor = Color.BLACK
-    private var brushStrokeWidth = 0
+    private var brushStrokeWidth = 20
     private val mBitmapPaint = Paint(Paint.DITHER_FLAG)
+    private var mPath = Path()
 
+    //for "undo-forward" logic
+    private var brushStrokeView = mutableListOf<Brushstroke>()
+    private val brushStrokeStorage = mutableListOf<Brushstroke>()
 
     private val TOUCH_TOLERANCE = 4f
     private var mX = 0f
@@ -30,7 +32,7 @@ class DrawView(c: Context, attributeSet: AttributeSet) : View(c, attributeSet) {
         val backgroundColor = Color.WHITE
         mCanvas?.drawColor(backgroundColor)
 
-        for (brushStrokes in paths) {
+        for (brushStrokes in brushStrokeView) {
             mPaint.color = brushStrokes.color
             mPaint.strokeWidth = brushStrokes.brushStrokeWidth.toFloat()
             when (mTool) {
@@ -65,7 +67,7 @@ class DrawView(c: Context, attributeSet: AttributeSet) : View(c, attributeSet) {
     private fun touchStart(x: Float, y: Float) {
         mPath = Path()
         val brushstroke = Brushstroke(currentColor, brushStrokeWidth, mPath)
-        paths.add(brushstroke)
+        brushStrokeView.addAll(listOf(brushstroke))
 
         //finally remove any curve or line from the path
         mPath.reset()
@@ -112,8 +114,17 @@ class DrawView(c: Context, attributeSet: AttributeSet) : View(c, attributeSet) {
 
     //buttons
     fun back() {
-        if (paths.size != 0) {
-            paths.removeAt(paths.size - 1)
+        if (brushStrokeView.isNotEmpty()) {
+            val undoBrushstroke = brushStrokeView.removeAt(brushStrokeView.size - 1)
+            brushStrokeStorage.add(undoBrushstroke)
+            invalidate()
+        }
+    }
+
+    fun forward() {
+        if (brushStrokeStorage.isNotEmpty()) {
+            val forwardBrushstroke = brushStrokeStorage.get(brushStrokeStorage.lastIndex)
+            brushStrokeView.add(forwardBrushstroke)
             invalidate()
         }
     }
