@@ -1,10 +1,13 @@
 package com.example.justdrawit.draw
 
+import android.app.Application
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
+import androidx.lifecycle.ViewModelProvider
+import com.example.justdrawit.application.JustDrawItApplication
 import kotlin.math.abs
 
 class DrawView(c: Context, attributeSet: AttributeSet) : View(c, attributeSet) {
@@ -17,14 +20,13 @@ class DrawView(c: Context, attributeSet: AttributeSet) : View(c, attributeSet) {
     private var brushStrokeWidth = 20
     private val mBitmapPaint = Paint(Paint.DITHER_FLAG)
     private var mPath = Path()
-
-    //for "undo-forward" logic
-    private var brushStrokeView = mutableListOf<Brushstroke>()
-    private val brushStrokeStorage = mutableListOf<Brushstroke>()
-
     private val TOUCH_TOLERANCE = 4f
     private var mX = 0f
     private var mY = 0f
+
+    private val drawViewModel: DrawViewModel by lazy {
+        ViewModelProvider(context.applicationContext as JustDrawItApplication, ViewModelProvider.AndroidViewModelFactory.getInstance(context.applicationContext as Application)).get(DrawViewModel::class.java)
+    }
 
     override fun onDraw(canvas: Canvas) {
         if (mBitmap == null) return
@@ -32,7 +34,7 @@ class DrawView(c: Context, attributeSet: AttributeSet) : View(c, attributeSet) {
         val backgroundColor = Color.WHITE
         mCanvas?.drawColor(backgroundColor)
 
-        for (brushStrokes in brushStrokeView) {
+        for (brushStrokes in drawViewModel.brushStrokeView) {
             mPaint.color = brushStrokes.color
             mPaint.strokeWidth = brushStrokes.brushStrokeWidth.toFloat()
             when (mTool) {
@@ -67,7 +69,8 @@ class DrawView(c: Context, attributeSet: AttributeSet) : View(c, attributeSet) {
     private fun touchStart(x: Float, y: Float) {
         mPath = Path()
         val brushstroke = Brushstroke(currentColor, brushStrokeWidth, mPath)
-        brushStrokeView.addAll(listOf(brushstroke))
+        //brushStrokeView.addAll(listOf(brushstroke))
+        drawViewModel.brushStrokeView.addAll(listOf(brushstroke))
 
         //finally remove any curve or line from the path
         mPath.reset()
@@ -114,17 +117,17 @@ class DrawView(c: Context, attributeSet: AttributeSet) : View(c, attributeSet) {
 
     //buttons
     fun back() {
-        if (brushStrokeView.isNotEmpty()) {
-            val undoBrushstroke = brushStrokeView.removeAt(brushStrokeView.size - 1)
-            brushStrokeStorage.add(undoBrushstroke)
+        if (drawViewModel.brushStrokeView.isNotEmpty()) {
+            val undoBrushstroke = drawViewModel.brushStrokeView.removeAt(drawViewModel.brushStrokeView.size - 1)
+            drawViewModel.brushStrokeStorage.add(undoBrushstroke)
             invalidate()
         }
     }
 
     fun forward() {
-        if (brushStrokeStorage.isNotEmpty()) {
-            val forwardBrushstroke = brushStrokeStorage.get(brushStrokeStorage.lastIndex)
-            brushStrokeView.add(forwardBrushstroke)
+        if (drawViewModel.brushStrokeStorage.isNotEmpty()) {
+            val forwardBrushstroke = drawViewModel.brushStrokeStorage[drawViewModel.brushStrokeStorage.lastIndex]
+            drawViewModel.brushStrokeView.add(forwardBrushstroke)
             invalidate()
         }
     }
