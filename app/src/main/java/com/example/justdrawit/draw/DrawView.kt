@@ -39,6 +39,7 @@ class DrawView(c: Context, attributeSet: AttributeSet) : View(c, attributeSet) {
             mPaint.strokeWidth = brushStrokes.brushStrokeWidth.toFloat()
             when (mTool) {
                 Tool.Pencil -> mCanvas?.drawPath(brushStrokes.path, mPaint)
+                Tool.Brush -> mCanvas?.drawPath(brushStrokes.path, mPaint)
                 else -> mCanvas?.drawPath(brushStrokes.path, mPaint)
             }
         }
@@ -69,7 +70,6 @@ class DrawView(c: Context, attributeSet: AttributeSet) : View(c, attributeSet) {
     private fun touchStart(x: Float, y: Float) {
         mPath = Path()
         val brushstroke = Brushstroke(currentColor, brushStrokeWidth, mPath)
-        //brushStrokeView.addAll(listOf(brushstroke))
         drawViewModel.brushStrokeView.addAll(listOf(brushstroke))
 
         //finally remove any curve or line from the path

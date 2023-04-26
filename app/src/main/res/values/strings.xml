@@ -11,4 +11,7 @@
     <string name="colors">Colors</string>
     <string name="settings">Settings</string>
     <string name="forward">Forward</string>
+    <string name="tool_s_size">Tool`s size</string>
+    <string name="pencil">Pencil</string>
+    <string name="brush">Brush</string>
 </resources>
