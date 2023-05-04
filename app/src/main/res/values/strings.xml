@@ -14,4 +14,6 @@
     <string name="tool_s_size">Tool`s size</string>
     <string name="pencil">Pencil</string>
     <string name="brush">Brush</string>
+    <string name="save_image">Save image</string>
+
 </resources>

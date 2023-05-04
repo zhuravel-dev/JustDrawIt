@@ -140,4 +140,8 @@ class DrawView(c: Context, attributeSet: AttributeSet) : View(c, attributeSet) {
         brushStrokeWidth = width
     }
 
+    fun save() : Bitmap? {
+            return mBitmap
+        }
+
 }

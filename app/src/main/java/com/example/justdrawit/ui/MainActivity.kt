@@ -1,6 +1,8 @@
 package com.example.justdrawit.ui
 
-import android.content.Context
+import android.app.Activity
+import android.content.Intent
+import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
@@ -8,7 +10,11 @@ import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
+import android.widget.PopupMenu
 import android.widget.PopupWindow
+import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.example.justdrawit.R
 import com.example.justdrawit.databinding.ActivityMainBinding
@@ -17,12 +23,29 @@ import com.google.android.material.slider.RangeSlider
 import com.skydoves.colorpickerview.ColorPickerDialog
 import com.skydoves.colorpickerview.listeners.ColorListener
 
+
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var popupBinding: PopupLayoutBinding
     private lateinit var popupWindow: PopupWindow
     private lateinit var rangeSlider: RangeSlider
+
+    private val startActivityForResult =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+            if (it.resultCode == Activity.RESULT_OK) {
+                if (it.data != null && it.data?.data != null) {
+                    val bmp = binding.drawView.save()
+                    it.data?.data?.let { uri ->
+                        contentResolver.openOutputStream(uri)?.use { op ->
+                            bmp?.compress(Bitmap.CompressFormat.PNG, 100, op)
+                        }
+                    }
+                } else {
+                    Toast.makeText(this, "Some error ocured", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,11 +56,10 @@ class MainActivity : AppCompatActivity() {
         binding.btnBack.setOnClickListener { binding.drawView.back() }
         binding.btnForward.setOnClickListener { binding.drawView.forward() }
         binding.btnColors.setOnClickListener { showColorPickerDialog() }
-        binding.btnSettings.setOnClickListener { binding.drawView.back() }
         binding.btnTools.setOnClickListener {
             showPopup()
         }
-
+        binding.btnSettings.setOnClickListener { showSettings(it) }
 
         val vto: ViewTreeObserver = binding.drawView.viewTreeObserver
         vto.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
@@ -51,10 +73,37 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        outState.putInt("stroke_width", rangeSlider.values[0].toInt())
+    private fun showSettings(view: View) {
+        val popupMenu = PopupMenu(this, view)
+        popupMenu.inflate(R.menu.popup_settings)
+        popupMenu.setOnMenuItemClickListener {
+            when (it.itemId) {
+                R.id.item1_save -> {
+                    saveImage("image", startActivityForResult)
+                    //it.setIcon(R.drawable.ic_baseline_save_24)
+                    true
+                }
+                else -> false
+            }
+        }
+        popupMenu.show()
     }
+
+    private fun saveImage(fileName: String, launcher: ActivityResultLauncher<Intent>) {
+            val intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
+            intent.addCategory(Intent.CATEGORY_OPENABLE)
+            // file type
+            intent.type = "image/*"
+            // file name
+            intent.putExtra(Intent.EXTRA_TITLE, fileName)
+            intent.addFlags(
+                Intent.FLAG_GRANT_READ_URI_PERMISSION
+                        or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                        or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+                        or Intent.FLAG_GRANT_PREFIX_URI_PERMISSION
+            )
+            launcher.launch(intent)
+        }
 
 
     private fun showPopup() {
