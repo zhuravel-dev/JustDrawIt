@@ -5,6 +5,7 @@ import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
 import android.view.MotionEvent
+import android.view.ScaleGestureDetector
 import android.view.View
 import androidx.lifecycle.ViewModelProvider
 import com.example.justdrawit.application.JustDrawItApplication
@@ -24,8 +25,19 @@ class DrawView(c: Context, attributeSet: AttributeSet) : View(c, attributeSet) {
     private var mX = 0f
     private var mY = 0f
 
-    private val drawViewModel: DrawViewModel by lazy {
+    val drawViewModel: DrawViewModel by lazy {
         ViewModelProvider(context.applicationContext as JustDrawItApplication, ViewModelProvider.AndroidViewModelFactory.getInstance(context.applicationContext as Application)).get(DrawViewModel::class.java)
+    }
+
+    private var mDetector: ScaleGestureDetector? = null
+
+    init {
+        if (drawViewModel.mDetector == null) {
+            mDetector = ScaleGestureDetector(context, ScaleListener())
+            drawViewModel.mDetector = mDetector
+        } else {
+            mDetector = drawViewModel.mDetector
+        }
     }
 
     override fun onDraw(canvas: Canvas) {
@@ -33,7 +45,7 @@ class DrawView(c: Context, attributeSet: AttributeSet) : View(c, attributeSet) {
         canvas.save()
         val backgroundColor = Color.WHITE
         mCanvas?.drawColor(backgroundColor)
-
+        canvas.scale(drawViewModel.viewModelScaleFactor, drawViewModel.viewModelScaleFactor)
         for (brushStrokes in drawViewModel.brushStrokeView) {
             mPaint.color = brushStrokes.color
             mPaint.strokeWidth = brushStrokes.brushStrokeWidth.toFloat()
@@ -45,6 +57,13 @@ class DrawView(c: Context, attributeSet: AttributeSet) : View(c, attributeSet) {
         }
         canvas.drawBitmap(mBitmap!!, 0f, 0f, mBitmapPaint)
         canvas.restore()
+    }
+
+    override fun onSizeChanged(width: Int, height: Int, oldWidth: Int, oldHeight: Int) {
+        super.onSizeChanged(width, height, oldWidth, oldHeight)
+        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        mBitmap = bitmap
+        mCanvas = Canvas(bitmap)
     }
 
     init {
@@ -64,7 +83,7 @@ class DrawView(c: Context, attributeSet: AttributeSet) : View(c, attributeSet) {
             mCanvas = Canvas(it)
         }
         currentColor = Color.BLACK
-        brushStrokeWidth = 20
+        brushStrokeWidth = drawViewModel.strokeWidth.toInt()
     }
 
     private fun touchStart(x: Float, y: Float) {
@@ -112,7 +131,17 @@ class DrawView(c: Context, attributeSet: AttributeSet) : View(c, attributeSet) {
                 invalidate()
             }
         }
+        mDetector?.onTouchEvent(event)
         return true
+    }
+
+    private inner class ScaleListener : ScaleGestureDetector.SimpleOnScaleGestureListener() {
+        override fun onScale(detector: ScaleGestureDetector): Boolean {
+            drawViewModel.viewModelScaleFactor *= detector.scaleFactor
+            drawViewModel.viewModelScaleFactor = Math.max(0.1f, Math.min(drawViewModel.viewModelScaleFactor, 10.0f))
+            invalidate()
+            return true
+        }
     }
 
     //buttons
@@ -137,11 +166,11 @@ class DrawView(c: Context, attributeSet: AttributeSet) : View(c, attributeSet) {
     }
 
     fun setStrokeWidth(width: Int) {
+        drawViewModel.strokeWidth = width.toFloat()
         brushStrokeWidth = width
     }
 
     fun save() : Bitmap? {
             return mBitmap
         }
-
 }

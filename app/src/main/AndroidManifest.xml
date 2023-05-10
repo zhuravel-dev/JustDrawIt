@@ -31,7 +31,9 @@
 
         <activity
             android:name=".ui.MainActivity"
-            android:exported="true">
+            android:exported="true"
+            android:configChanges="orientation|keyboardHidden"
+            android:screenOrientation="sensor">
         </activity>
     </application>
 

@@ -2,4 +2,5 @@
 <resources>
     <item name="linearLayoutForTools" type="id" />
     <item name="menu_save" type="id" />
+    <item name="zoom_view" type="id" />
 </resources>

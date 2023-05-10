@@ -23,13 +23,11 @@ import com.google.android.material.slider.RangeSlider
 import com.skydoves.colorpickerview.ColorPickerDialog
 import com.skydoves.colorpickerview.listeners.ColorListener
 
-
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var popupBinding: PopupLayoutBinding
-    private lateinit var popupWindow: PopupWindow
-    private lateinit var rangeSlider: RangeSlider
+    private var rangeSlider: RangeSlider? = null
 
     private val startActivityForResult =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
@@ -70,7 +68,6 @@ class MainActivity : AppCompatActivity() {
                 binding.drawView.init(height, width)
             }
         })
-
     }
 
     private fun showSettings(view: View) {
@@ -119,9 +116,10 @@ class MainActivity : AppCompatActivity() {
     private fun setupRangeSlider(){
         //popupBinding = PopupLayoutBinding.inflate(layoutInflater)
         rangeSlider = popupBinding.rangeSlider
-        rangeSlider.valueFrom = 0.0f
-        rangeSlider.valueTo = 100.0f
-        rangeSlider.addOnChangeListener(RangeSlider.OnChangeListener { slider, value, fromUser ->
+        rangeSlider?.setValues(binding.drawView.drawViewModel.strokeWidth)
+        rangeSlider?.valueFrom = 0.0f
+        rangeSlider?.valueTo = 100.0f
+        rangeSlider?.addOnChangeListener(RangeSlider.OnChangeListener { slider, value, fromUser ->
             binding.drawView.setStrokeWidth(slider.values[0].toInt()) })
     }
 
@@ -139,5 +137,4 @@ class MainActivity : AppCompatActivity() {
             }
         })
     }
-
 }
